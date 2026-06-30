@@ -56,7 +56,7 @@
             gap: 20px;
         }
 
-        /* 桌機與平板橫向排版（大螢幕） */
+        /* 💻 桌機與平板橫向排版（大螢幕 1024px 以上） */
         @media (min-width: 1024px) {
             body { padding: 20px; }
             .container {
@@ -70,7 +70,13 @@
                 top: 20px;
             }
             .toggle-setup-btn {
-                display: none !important;
+                display: none !important; /* 大螢幕不需要這個收合按鈕 */
+            }
+            .game-setup.collapsed {
+                max-height: none !important; /* 確保大螢幕下絕對不會被強行隱藏 */
+                padding: 12px !important;
+                margin-bottom: 0 !important;
+                border: none !important;
             }
         }
 
@@ -241,12 +247,15 @@
             overflow: hidden;
         }
         
-        .game-setup.collapsed {
-            max-height: 0 !important;
-            padding-top: 0 !important;
-            padding-bottom: 0 !important;
-            margin: 0 !important;
-            border: none !important;
+        /* 📱 僅在小螢幕（寬度小於 1023px）時啟用收合隱藏動畫 */
+        @media (max-width: 1023px) {
+            .game-setup.collapsed {
+                max-height: 0 !important;
+                padding-top: 0 !important;
+                padding-bottom: 0 !important;
+                margin: 0 !important;
+                border: none !important;
+            }
         }
 
         .setup-row {
@@ -432,7 +441,7 @@
         }
         .undo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* 手機與平板直向優化 */
+        /* 手機與平板直向優化（小螢幕置頂導覽列） */
         @media (max-width: 1023px) {
             body { padding-top: 175px; } 
             header { margin-bottom: 15px; }
@@ -550,7 +559,7 @@
             font-size: 0.85rem;
         }
 
-        /* 👑 新增：胡牌大役全螢幕特效動畫樣式 */
+        /* 胡牌大役全螢幕特效動畫樣式 */
         .yaku-anim-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -560,7 +569,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            pointer-events: none; /* 點擊穿透，不干擾使用者操作 */
+            pointer-events: none; 
             opacity: 0;
             visibility: hidden;
             transition: opacity 0.3s, visibility 0.3s;
@@ -773,7 +782,6 @@
         let pendingWinner = null; 
         let historyState = null;
 
-        // 👑 新增：紀錄本局已經播放過動畫的役名，防止點選延伸張時重複彈出
         let triggeredAnimsInCurrentRound = new Set();
 
         function toggleSetupMenu() {
@@ -1012,17 +1020,15 @@
 
         function resetCurrentBoard() {
             selectedCards.clear();
-            triggeredAnimsInCurrentRound.clear(); // 新一局重設動畫觸發池
+            triggeredAnimsInCurrentRound.clear(); 
             document.querySelectorAll('.card').forEach(el => el.classList.remove('selected'));
             calculateScore();
         }
 
-        // 👑 新增：觸發全螢幕大役動畫函數
         function triggerYakuAnimation(yakuName) {
             const isAnimEnabled = document.getElementById('enable-anim-checkbox').checked;
-            if (!isAnimEnabled) return; // 如果使用者關閉了動畫選項，直接返回
+            if (!isAnimEnabled) return; 
 
-            // 如果本局已經播過這個役的動畫，就不重複轟炸螢幕
             if (triggeredAnimsInCurrentRound.has(yakuName)) return;
             triggeredAnimsInCurrentRound.add(yakuName);
 
@@ -1032,7 +1038,6 @@
             title.innerText = yakuName;
             overlay.classList.add('show');
 
-            // 2 秒後自動隱藏
             setTimeout(() => {
                 overlay.classList.remove('show');
             }, 2000);
@@ -1054,7 +1059,6 @@
             let yakuResults = [];
             let totalPoints = 0;
 
-            // 判斷五光系列
             const hasMichikaze = gokoCards.some(c => c.id === 41);
             if (gokoCards.length === 5) {
                 yakuResults.push({ name: "五光", pts: 10 });
@@ -1074,7 +1078,6 @@
                 }
             }
 
-            // 酒系列 (月見/花見)
             const hasSake = currentCards.some(c => c.id === 33);
             const hasMaku = currentCards.some(c => c.id === 9);
             const hasTsuki = currentCards.some(c => c.id === 29);
@@ -1087,7 +1090,6 @@
                 triggerYakuAnimation("月見で一杯");
             }
 
-            // 短冊與赤短青短
             const akaCount = currentCards.filter(c => c.type === "赤短").length;
             const aoCount = currentCards.filter(c => c.type === "青短").length;
             let hasSpecialTan = false;
@@ -1102,18 +1104,17 @@
                 tanBonus = tanAllCards.length - 3;
                 yakuResults.push({ name: `赤短 (+${tanBonus}張)`, pts: 5 + tanBonus });
                 hasSpecialTan = true;
-                triggerYakuAnimation("赤短 🔴"); // 👑 觸發赤短動畫！
+                triggerYakuAnimation("赤短 🔴"); 
             } else if (aoCount === 3) {
                 tanBonus = tanAllCards.length - 3;
                 yakuResults.push({ name: `青短 (+${tanBonus}張)`, pts: 5 + tanBonus });
                 hasSpecialTan = true;
-                triggerYakuAnimation("青短 🔵"); // 👑 觸發青短動畫！
+                triggerYakuAnimation("青短 🔵"); 
             }
             if (!hasSpecialTan && tanAllCards.length >= 5) {
                 yakuResults.push({ name: `短冊 (${tanAllCards.length}張)`, pts: 1 + (tanAllCards.length - 5) });
             }
 
-            // 豬鹿蝶與種牌
             const hasInu = currentCards.some(c => c.id === 25);
             const hasShika = currentCards.some(c => c.id === 37);
             const hasCho = currentCards.some(c => c.id === 21);
@@ -1123,13 +1124,12 @@
                 let taneBonus = taneCards.length - 3;
                 yakuResults.push({ name: `豬鹿蝶 (+${taneBonus}張)`, pts: 5 + taneBonus });
                 hasInoShikaCho = true;
-                triggerYakuAnimation("豬鹿蝶 🐗🦌🦋"); // 👑 觸發豬鹿蝶動畫！
+                triggerYakuAnimation("豬鹿蝶 🐗🦌🦋"); 
             }
             if (!hasInoShikaCho && taneCards.length >= 5) {
                 yakuResults.push({ name: `種 (${taneCards.length}張)`, pts: 1 + (taneCards.length - 5) });
             }
 
-            // 粕牌
             if (kasuCards.length >= 10) {
                 yakuResults.push({ name: `カス (${kasuCards.length}張)`, pts: 1 + (kasuCards.length - 10) });
             }
