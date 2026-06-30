@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>来い来い役算機 & 記分板</title>
+    <style>
+        :root {
+            --bg-color: #f7f9fa;
+            --card-bg: #ffffff;
+            --primary-color: #e63946;
+            --dark-color: #1d3557;
+            --light-blue: #a8dadc;
+            --gold: #ffb703;
+            --purple: #8338ec;
+            --success: #2a9d8f;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--dark-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1400px;
+            width: 100%;
+            gap: 20px;
+        }
+
+        @media (min-width: 1100px) {
+            .container {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+        }
+
+        /* 左側大牌組區 */
+        .board {
+            flex: 3;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .half-year-row {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .half-year-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--dark-color);
+            padding-left: 5px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .months-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .month-group {
+            display: flex;
+            background: #ffffff;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #edf2f4;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .month-label {
+            width: 35px;
+            font-weight: bold;
+            color: #4a5568;
+            text-align: center;
+            font-size: 1rem;
+            border-right: 2px solid #e2e8f0;
+            padding-right: 8px;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* 花牌卡片樣式 */
+        .card {
+            width: 85px;
+            height: 130px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            background: #fff;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .card.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.4);
+        }
+
+        .card .card-type {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            font-size: 0.65rem;
+            padding: 1px 4px;
+            border-radius: 3px;
+            color: white;
+            z-index: 2;
+            font-weight: bold;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .card[data-type="光"] .card-type { background: var(--gold); color: #000; }
+        .card[data-type="種"] .card-type { background: #2a9d8f; }
+        .card[data-type="赤短"] .card-type { background: var(--primary-color); }
+        .card[data-type="青短"] .card-type { background: var(--purple); }
+        .card[data-type="短冊"] .card-type { background: #457b9d; }
+        .card[data-type="粕"] .card-type { background: #6c757d; }
+
+        .card img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block; 
+            z-index: 1;
+        }
+
+        /* 右側結算與記分板面板 */
+        .sidebar {
+            flex: 1;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .sidebar h2 {
+            font-size: 1.3rem;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--dark-color);
+        }
+
+        /* 遊戲初始設定區 */
+        .game-setup {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .setup-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+        .setup-row:last-child { margin-bottom: 0; }
+        .setup-row input, .setup-row select {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+        }
+        .start-btn {
+            width: 100%;
+            background: var(--dark-color);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
+        /* 狀態與計分看板 */
+        .scoreboard {
+            background: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .round-display {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--dark-color);
+            margin-bottom: 10px;
+        }
+        .players-scores {
+            display: flex;
+            justify-content: space-around;
+        }
+        .player-score-box {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            width: 45%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .p-name {
+            font-size: 0.85rem;
+            color: #64748b;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .p-score {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        /* 結算按鈕區 */
+        .settle-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .settle-buttons-row {
+            display: flex;
+            gap: 10px;
+        }
+        .settle-btn {
+            flex: 1;
+            color: white;
+            border: none;
+            padding: 11px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: opacity 0.2s;
+        }
+        .settle-btn.p1 { background: #3a86ff; }
+        .settle-btn.p2 { background: #8338ec; }
+        .settle-btn.draw { background: #6c757d; width: 100%; }
+        .settle-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #edf2f4;
+        }
+
+        .results-list {
+            min-height: 100px;
+            max-height: 180px;
+            overflow-y: auto;
+            border-bottom: 1px solid #edf2f4;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px dashed #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .result-item .yaku-name { font-weight: 600; }
+        .result-item .yaku-pts { color: var(--primary-color); font-weight: bold; }
+        .no-yaku { color: #94a3b8; text-align: center; padding-top: 10px; font-style: italic; font-size: 0.9rem; }
+
+        .total-section {
+            text-align: right;
+        }
+
+        .raw-score { font-size: 0.9rem; color: #64748b; }
+        .final-score { font-size: 1.6rem; font-weight: 800; color: var(--dark-color); }
+
+        .multiplier-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+
+        .reset-btn {
+            width: 100%;
+            background: #94a3b8;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* 隱藏/顯示自訂對話框的樣式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        .modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+        .modal-box h3 { margin-bottom: 12px; color: var(--dark-color); }
+        .modal-box p { font-size: 0.95rem; color: #64748b; margin-bottom: 20px; line-height: 1.4; }
+        .modal-choice-btns { display: flex; gap: 10px; justify-content: center; }
+        .modal-choice-btns button {
+            flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white;
+        }
+        .btn-p1-choice { background: #3a86ff; }
+        .btn-p2-choice { background: #8338ec; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>来い来い役算機 & 記分板</h1>
+        <p>點擊獲得的花牌，計算得分後可直接累計至玩家對局紀錄中</p>
+    </header>
+
+    <div class="container">
+        <div class="board" id="board"></div>
+
+        <div class="sidebar">
+            <h2>對局設定</h2>
+            <div class="game-setup" id="setup-area">
+                <div class="setup-row">
+                    <input type="text" id="p1-input" value="玩家 A" placeholder="玩家 A 名稱">
+                    <input type="text" id="p2-input" value="玩家 B" placeholder="玩家 B 名稱">
+                </div>
+                <div class="setup-row">
+                    <label for="total-rounds">遊玩局數：</label>
+                    <select id="total-rounds">
+                        <option value="3">3 局 (三本勝負)</option>
+                        <option value="6">6 局 (半載勝負)</option>
+                        <option value="12" selected>12 局 (一年勝負)</option>
+                    </select>
+                </div>
+                <button class="start-btn" onclick="startGame()">開始新遊戲</button>
+            </div>
+
+            <h2>對局狀態</h2>
+            <div class="scoreboard">
+                <div class="round-display" id="round-title">未開始遊戲</div>
+                <div class="players-scores">
+                    <div class="player-score-box">
+                        <div class="p-name" id="p1-label">玩家 A</div>
+                        <div class="p-score" id="p1-score">0</div>
+                    </div>
+                    <div class="player-score-box">
+                        <div class="p-name" id="p2-label">玩家 B</div>
+                        <div class="p-score" id="p2-score">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>本局得分登錄</h2>
+            <div class="settle-section">
+                <div class="settle-buttons-row">
+                    <button class="settle-btn p1" id="settle-p1-btn" onclick="settleRound(1)" disabled>← 登記 玩家 A 勝</button>
+                    <button class="settle-btn p2" id="settle-p2-btn" onclick="settleRound(2)" disabled>登記 玩家 B 勝 →</button>
+                </div>
+                <button class="settle-btn draw" id="settle-draw-btn" onclick="handleDrawGame()" disabled>無役 / 來來流局結算</button>
+            </div>
+
+            <h2>當前牌面計算</h2>
+            <div class="stats">
+                <div>光: <span id="cnt-goko">0</span></div>
+                <div>種: <span id="cnt-tane">0</span></div>
+                <div>短冊: <span id="cnt-tan">0</span></div>
+                <div>粕: <span id="cnt-kasu">0</span></div>
+            </div>
+
+            <div class="results-list" id="results-list">
+                <div class="no-yaku">尚未達成任何役</div>
+            </div>
+
+            <div class="total-section">
+                <div class="raw-score" id="raw-score">基礎總計：0 點</div>
+                <div class="final-score" id="final-score">0 點 (文)</div>
+                <div id="multiplier-container"></div>
+            </div>
+
+            <button class="reset-btn" onclick="resetCurrentBoard()">重選本局牌面</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="draw-modal">
+        <div class="modal-box">
+            <h3>🎴 本局無役流局</h3>
+            <p>雙方玩家皆無達成役，或是喊了「來來」後流局。<br>依規則將由<strong>當局莊家（親）獲得 6 點</strong>。<br>請點選誰是這一局的莊家：</p>
+            <div class="modal-choice-btns">
+                <button class="btn-p1-choice" id="modal-p1-btn" onclick="settleDrawWinner(1)">玩家 A</button>
+                <button class="btn-p2-choice" id="modal-p2-btn" onclick="settleDrawWinner(2)">玩家 B</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const cardDatabase = [
+            { id: 1,  month: 1,  name: "松上鶴", type: "光" },
+            { id: 2,  month: 1,  name: "松上赤短", type: "赤短" },
+            { id: 3,  month: 1,  name: "松皮1", type: "粕" },
+            { id: 4,  month: 1,  name: "松皮2", type: "粕" },
+            { id: 5,  month: 2,  name: "梅上鶯", type: "種" },
+            { id: 6,  month: 2,  name: "梅上赤短", type: "赤短" },
+            { id: 7,  month: 2,  name: "梅皮1", type: "粕" },
+            { id: 8,  month: 2,  name: "梅皮2", type: "粕" },
+            { id: 9,  month: 3,  name: "櫻間幕", type: "光" },
+            { id: 10, month: 3,  name: "櫻上赤短", type: "赤短" },
+            { id: 11, month: 3,  name: "櫻皮1", type: "粕" },
+            { id: 12, month: 3,  name: "櫻皮2", type: "粕" },
+            { id: 13, month: 4,  name: "藤上杜鵑", type: "種" },
+            { id: 14, month: 4,  name: "藤上短冊", type: "短冊" },
+            { id: 15, month: 4,  name: "藤皮1", type: "粕" },
+            { id: 16, month: 4,  name: "藤皮2", type: "粕" },
+            { id: 17, month: 5,  name: "杜若八橋", type: "種" },
+            { id: 18, month: 5,  name: "杜若短冊", type: "短冊" },
+            { id: 19, month: 5,  name: "杜若皮1", type: "粕" },
+            { id: 20, month: 5,  name: "杜若皮2", type: "粕" },
+            { id: 21, month: 6,  name: "牡丹間蝶", type: "種" },
+            { id: 22, month: 6,  name: "牡丹青短", type: "青短" },
+            { id: 23, month: 6,  name: "牡丹皮1", type: "粕" },
+            { id: 24, month: 6,  name: "牡丹皮2", type: "粕" },
+            { id: 25, month: 7,  name: "萩間豬", type: "種" },
+            { id: 26, month: 7,  name: "萩上短冊", type: "短冊" },
+            { id: 27, month: 7,  name: "萩皮1", type: "粕" },
+            { id: 28, month: 7,  name: "萩皮2", type: "粕" },
+            { id: 29, month: 8,  name: "芒上月", type: "光" },
+            { id: 30, month: 8,  name: "芒上雁", type: "種" },
+            { id: 31, month: 8,  name: "芒皮1", type: "粕" },
+            { id: 32, month: 8,  name: "芒皮2", type: "粕" },
+            { id: 33, month: 9,  name: "菊に盃", type: "種" },
+            { id: 34, month: 9,  name: "菊上青短", type: "青短" },
+            { id: 35, month: 9,  name: "菊皮1", type: "粕" },
+            { id: 36, month: 9,  name: "菊皮2", type: "粕" },
+            { id: 37, month: 10, name: "紅葉間鹿", type: "種" },
+            { id: 38, month: 10, name: "紅葉青短", type: "青短" },
+            { id: 39, month: 10, name: "紅葉皮1", type: "粕" },
+            { id: 40, month: 10, name: "紅葉皮2", type: "粕" },
+            { id: 41, month: 11, name: "柳間小野道風", type: "光" },
+            { id: 42, month: 11, name: "柳上燕", type: "種" },
+            { id: 43, month: 11, name: "柳上短冊", type: "短冊" },
+            { id: 44, month: 11, name: "柳皮(雷)", type: "粕" },
+            { id: 45, month: 12, name: "桐に鳳凰", type: "光" },
+            { id: 46, month: 12, name: "桐皮(商標)", type: "粕" },
+            { id: 47, month: 12, name: "桐皮(別製)", type: "粕" },
+            { id: 48, month: 12, name: "桐皮(任天堂)", type: "粕" }
+        ];
+
+        let selectedCards = new Set();
+        let gameActive = false;
+        let p1Name = "玩家 A";
+        let p2Name = "玩家 B";
+        let currentRound = 1;
+        let totalRounds = 12;
+        let p1Score = 0;
+        let p2Score = 0;
+        let currentCalculatedPoints = 0; 
+
+        function initBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            const halves = [
+                { title: "上半年 (1月 ~ 6月)", months: [1, 2, 3, 4, 5, 6] },
+                { title: "下半年 (7月 ~ 12月)", months: [7, 8, 9, 10, 11, 12] }
+            ];
+
+            halves.forEach(half => {
+                const halfRow = document.createElement('div');
+                halfRow.className = 'half-year-row';
+                const halfTitle = document.createElement('div');
+                halfTitle.className = 'half-year-title';
+                halfTitle.innerText = half.title;
+                halfRow.appendChild(halfTitle);
+
+                const monthsFlex = document.createElement('div');
+                monthsFlex.className = 'months-flex';
+
+                half.months.forEach(m => {
+                    const monthGroup = document.createElement('div');
+                    monthGroup.className = 'month-group';
+                    const label = document.createElement('div');
+                    label.className = 'month-label';
+                    label.innerText = m + "月";
+                    monthGroup.appendChild(label);
+
+                    const cardsContainer = document.createElement('div');
+                    cardsContainer.className = 'cards-container';
+
+                    const monthCards = cardDatabase.filter(c => c.month === m);
+                    monthCards.forEach(card => {
+                        const cardEl = document.createElement('div');
+                        cardEl.className = 'card';
+                        cardEl.setAttribute('data-id', card.id);
+                        cardEl.setAttribute('data-type', card.type);
+                        
+                        let displayType = card.type;
+                        if(displayType === "赤短" || displayType === "青短") displayType = "短冊";
+                        let pathType = card.type;
+                        if(pathType === "赤dark" || pathType === "青短" || pathType === "赤短") pathType = "短冊";
+
+                        cardEl.innerHTML = `
+                            <span class="card-type">${displayType}</span>
+                            <img src="img/${card.month}_${pathType}_${card.name}.png" alt="${card.name}">
+                        `;
+
+                        cardEl.addEventListener('click', () => toggleCard(card.id, cardEl));
+                        cardsContainer.appendChild(cardEl);
+                    });
+                    monthGroup.appendChild(cardsContainer);
+                    monthsFlex.appendChild(monthGroup);
+                });
+                halfRow.appendChild(monthsFlex);
+                board.appendChild(halfRow);
+            });
+            updateSettleButtonsState();
+        }
+
+        function startGame() {
+            p1Name = document.getElementById('p1-input').value.trim() || "玩家 A";
+            p2Name = document.getElementById('p2-input').value.trim() || "玩家 B";
+            totalRounds = parseInt(document.getElementById('total-rounds').value);
+            
+            currentRound = 1;
+            p1Score = 0;
+            p2Score = 0;
+            gameActive = true;
+
+            document.getElementById('p1-label').innerText = p1Name;
+            document.getElementById('p2-label').innerText = p2Name;
+            document.getElementById('modal-p1-btn').innerText = p1Name;
+            document.getElementById('modal-p2-btn').innerText = p2Name;
+            document.getElementById('p1-score').innerText = '0';
+            document.getElementById('p2-score').innerText = '0';
+            
+            updateRoundUI();
+            resetCurrentBoard();
+        }
+
+        function updateRoundUI() {
+            if(gameActive) {
+                document.getElementById('round-title').innerText = `第 ${currentRound} / ${totalRounds} 局`;
+            } else {
+                document.getElementById('round-title').innerText = `遊戲未開始`;
+            }
+            updateSettleButtonsState();
+        }
+
+        function updateSettleButtonsState() {
+            const btn1 = document.getElementById('settle-p1-btn');
+            const btn2 = document.getElementById('settle-p2-btn');
+            const drawBtn = document.getElementById('settle-draw-btn');
+
+            if(gameActive) {
+                drawBtn.disabled = false; // 遊戲進行中隨時可以宣告流局
+                if(currentCalculatedPoints > 0) {
+                    btn1.disabled = false;
+                    btn2.disabled = false;
+                    btn1.innerText = `← ${p1Name} 獲勝 (+${currentCalculatedPoints}點)`;
+                    btn2.innerText = `由 ${p2Name} 獲勝 (+${currentCalculatedPoints}點) →`;
+                } else {
+                    btn1.disabled = true;
+                    btn2.disabled = true;
+                    btn1.innerText = `← 登記 ${p1Name} 勝`;
+                    btn2.innerText = `登記 ${p2Name} 勝 →`;
+                }
+            } else {
+                btn1.disabled = true;
+                btn2.disabled = true;
+                drawBtn.disabled = true;
+            }
+        }
+
+        // 處理有胡牌時的常規結算
+        function settleRound(winner) {
+            if (!gameActive || currentCalculatedPoints <= 0) return;
+            addPointsToPlayer(winner, currentCalculatedPoints);
+        }
+
+        // 點選流局結算：跳出自訂對話框
+        function handleDrawGame() {
+            if (!gameActive) return;
+            document.getElementById('draw-modal').classList.add('active');
+        }
+
+        // 對話框點選莊家後的計分處理
+        function settleDrawWinner(winnerIdx) {
+            // 關閉對話框
+            document.getElementById('draw-modal').classList.remove('active');
+            // 莊家依規則直接加 6 點
+            addPointsToPlayer(winnerIdx, 6);
+        }
+
+        // 統一的分數灌入與局數推進邏輯
+        function addPointsToPlayer(playerIdx, points) {
+            if (playerIdx === 1) {
+                p1Score += points;
+                document.getElementById('p1-score').innerText = p1Score;
+            } else {
+                p2Score += points;
+                document.getElementById('p2-score').innerText = p2Score;
+            }
+
+            // 檢查是否達到終局
+            if (currentRound >= totalRounds) {
+                gameActive = false;
+                let finalWinner = p1Score > p2Score ? p1Name : (p2Score > p1Score ? p2Name : "雙方平手");
+                alert(`🎉 遊戲結束！\n【${p1Name}】總分：${p1Score} 點\n【${p2Name}】總分：${p2Score} 點\n恭喜最高分者：${finalWinner}！`);
+                document.getElementById('round-title').innerText = `對局結束！🏆 勝者：${finalWinner}`;
+                updateSettleButtonsState();
+            } else {
+                currentRound++;
+                updateRoundUI();
+                resetCurrentBoard(); // 自動清空牌面進入下一局
+            }
+        }
+
+        function toggleCard(id, element) {
+            if (selectedCards.has(id)) {
+                selectedCards.delete(id);
+                element.classList.remove('selected');
+            } else {
+                selectedCards.add(id);
+                element.classList.add('selected');
+            }
+            calculateScore();
+        }
+
+        function resetCurrentBoard() {
+            selectedCards.clear();
+            document.querySelectorAll('.card').forEach(el => el.classList.remove('selected'));
+            calculateScore();
+        }
+
+        function calculateScore() {
+            const currentCards = cardDatabase.filter(c => selectedCards.has(c.id));
+
+            const gokoCards = currentCards.filter(c => c.type === "光");
+            const taneCards = currentCards.filter(c => c.type === "種");
+            const tanAllCards = currentCards.filter(c => c.type === "短冊" || c.type === "赤短" || c.type === "青短");
+            const kasuCards = currentCards.filter(c => c.type === "粕");
+
+            document.getElementById('cnt-goko').innerText = gokoCards.length;
+            document.getElementById('cnt-tane').innerText = taneCards.length;
+            document.getElementById('cnt-tan').innerText = tanAllCards.length;
+            document.getElementById('cnt-kasu').innerText = kasuCards.length;
+
+            let yakuResults = [];
+            let totalPoints = 0;
+
+            // 1. 光牌判定
+            const hasMichikaze = gokoCards.some(c => c.id === 41);
+            if (gokoCards.length === 5) {
+                yakuResults.push({ name: "五光", pts: 10 });
+            } else if (gokoCards.length === 4) {
+                if (hasMichikaze) {
+                    yakuResults.push({ name: "雨四光", pts: 7 });
+                } else {
+                    yakuResults.push({ name: "四光", pts: 8 });
+                }
+            } else if (gokoCards.length === 3) {
+                if (!hasMichikaze) {
+                    yakuResults.push({ name: "三光", pts: 5 });
+                }
+            }
+
+            // 2. 杯酒判定
+            const hasSake = currentCards.some(c => c.id === 33);
+            const hasMaku = currentCards.some(c => c.id === 9);
+            const hasTsuki = currentCards.some(c => c.id === 29);
+            if (hasSake && hasMaku) yakuResults.push({ name: "花見で一杯", pts: 5 });
+            if (hasSake && hasTsuki) yakuResults.push({ name: "月見で一杯", pts: 5 });
+
+            // 3. 短冊判定
+            const akaCount = currentCards.filter(c => c.type === "赤短").length;
+            const aoCount = currentCards.filter(c => c.type === "青短").length;
+            let hasSpecialTan = false;
+            let tanBonus = 0;
+
+            if (akaCount === 3 && aoCount === 3) {
+                tanBonus = tanAllCards.length - 6;
+                yakuResults.push({ name: `赤短・青短重複 (+${tanBonus}張)`, pts: 10 + tanBonus });
+                hasSpecialTan = true;
+            } else if (akaCount === 3) {
+                tanBonus = tanAllCards.length - 3;
+                yakuResults.push({ name: `赤短 (+${tanBonus}張)`, pts: 5 + tanBonus });
+                hasSpecialTan = true;
+            } else if (aoCount === 3) {
+                tanBonus = tanAllCards.length - 3;
+                yakuResults.push({ name: `青短 (+${tanBonus}張)`, pts: 5 + tanBonus });
+                hasSpecialTan = true;
+            }
+            if (!hasSpecialTan && tanAllCards.length >= 5) {
+                yakuResults.push({ name: `短冊 (${tanAllCards.length}張)`, pts: 1 + (tanAllCards.length - 5) });
+            }
+
+            // 4. 種牌判定
+            const hasInu = currentCards.some(c => c.id === 25);
+            const hasShika = currentCards.some(c => c.id === 37);
+            const hasCho = currentCards.some(c => c.id === 21);
+            let hasInoShikaCho = false;
+
+            if (hasInu && hasShika && hasCho) {
+                let taneBonus = taneCards.length - 3;
+                yakuResults.push({ name: `豬鹿蝶 (+${taneBonus}張)`, pts: 5 + taneBonus });
+                hasInoShikaCho = true;
+            }
+            if (!hasInoShikaCho && taneCards.length >= 5) {
+                yakuResults.push({ name: `種 (${taneCards.length}張)`, pts: 1 + (taneCards.length - 5) });
+            }
+
+            // 5. 粕牌判定
+            if (kasuCards.length >= 10) {
+                yakuResults.push({ name: `カス (${kasuCards.length}張)`, pts: 1 + (kasuCards.length - 10) });
+            }
+
+            const resultsListEl = document.getElementById('results-list');
+            resultsListEl.innerHTML = '';
+
+            if (yakuResults.length === 0) {
+                resultsListEl.innerHTML = '<div class="no-yaku">尚未達成任何役</div>';
+                document.getElementById('raw-score').innerText = '基礎總計：0 點';
+                document.getElementById('final-score').innerText = '0 點 (文)';
+                document.getElementById('multiplier-container').innerHTML = '';
+                currentCalculatedPoints = 0;
+                updateSettleButtonsState();
+                return;
+            }
+
+            yakuResults.forEach(yaku => {
+                totalPoints += yaku.pts;
+                const item = document.createElement('div');
+                item.className = 'result-item';
+                item.innerHTML = `<span class="yaku-name">${yaku.name}</span><span class="yaku-pts">${yaku.pts} 點</span>`;
+                resultsListEl.appendChild(item);
+            });
+
+            document.getElementById('raw-score').innerText = `基礎總計：${totalPoints} 點`;
+
+            const multiplierContainer = document.getElementById('multiplier-container');
+            if (totalPoints >= 7) {
+                currentCalculatedPoints = totalPoints * 2;
+                document.getElementById('final-score').innerText = `${currentCalculatedPoints} 點 (文)`;
+                multiplierContainer.innerHTML = '<span class="multiplier-badge">🔥 滿 7 點得分翻倍 (x2)！</span>';
+            } else {
+                currentCalculatedPoints = totalPoints;
+                document.getElementById('final-score').innerText = `${currentCalculatedPoints} 點 (文)`;
+                multiplierContainer.innerHTML = '';
+            }
+
+            updateSettleButtonsState();
+        }
+
+        window.onload = () => {
+            initBoard();
+            startGame(); 
+        };
+    </script>
+</body>
+</html>
