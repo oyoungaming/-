@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>来い来い役算機 & 記分板</title>
@@ -57,47 +56,21 @@
             gap: 20px;
         }
 
-        /* 1. 桌機與平板橫向排版（大螢幕） */
+        /* 桌機與平板橫向排版（大螢幕） */
         @media (min-width: 1024px) {
-            body { 
-                padding: 20px; 
-            }
+            body { padding: 20px; }
             .container {
                 flex-direction: row;
                 align-items: flex-start;
             }
-            .board { 
-                flex: 2.5; 
-            }
+            .board { flex: 2.5; }
             .sidebar { 
-                flex: 1;
+                flex: 1; 
                 position: sticky;
                 top: 20px;
             }
-        }
-
-        /* 2. 手機與平板直向排版（小螢幕修正） */
-        @media (max-width: 1023px) {
-            html, body, .container {
-                height: auto !important;
-                min-height: 100% !important;
-                overflow-y: auto !important;
-                display: block !important;
-            }
-            .board {
-                width: 100% !important;
-                display: block !important;
-            }
-            /* 讓手機版的對局設定浮出來，改到最下方顯示 */
-            .sidebar .game-setup {
-                display: block !important; /* 解除原本的隱藏設定 */
-                background: #f1f5f9 !important;
-                margin-top: 15px !important;
-                padding: 12px !important;
-                border-radius: 8px !important;
-            }
-            .sidebar .reset-btn {
-                display: block !important; /* 解除重置按鈕的隱藏 */
+            .toggle-setup-btn {
+                display: none !important; /* 電腦版不需要收合按鈕 */
             }
         }
 
@@ -137,7 +110,6 @@
             gap: 12px;
         }
 
-        /* 當螢幕夠寬時，月份群組可以並排 */
         @media (min-width: 640px) {
             .months-flex {
                 display: grid;
@@ -173,11 +145,10 @@
             flex: 1;
         }
 
-        /* 花牌卡片自適應樣式 */
         .card {
             flex: 1;
             max-width: 85px;
-            aspect-ratio: 1 / 1.5; /* 鎖定花札經典的 1:1.5 比例 */
+            aspect-ratio: 1 / 1.5;
             border: 2px solid #cbd5e1;
             border-radius: 6px;
             cursor: pointer;
@@ -230,7 +201,7 @@
             z-index: 1;
         }
 
-        /* 右側結算與記分板面板 */
+        /* 右側面板 */
         .sidebar {
             background: var(--card-bg);
             padding: 15px;
@@ -248,13 +219,39 @@
             border-bottom: 2px solid var(--dark-color);
         }
 
+        /* 手機版摺疊按鈕 */
+        .toggle-setup-btn {
+            width: 100%;
+            background: #4a5568;
+            color: white;
+            border: none;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+        }
+
         /* 遊戲初始設定區 */
         .game-setup {
             background: #f1f5f9;
             padding: 12px;
             border-radius: 8px;
             font-size: 0.85rem;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            overflow: hidden;
         }
+        
+        /* 透過這個 class 控制手機版的顯示/隱藏 */
+        .game-setup.collapsed {
+            max-height: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+        }
+
         .setup-row {
             display: flex;
             gap: 8px;
@@ -358,7 +355,7 @@
         }
 
         .results-list {
-            min-height: 60px;
+            min-height: 40px;
             max-height: 140px;
             overflow-y: auto;
             border-bottom: 1px solid #edf2f4;
@@ -395,8 +392,13 @@
             margin-top: 3px;
         }
 
+        .control-buttons-row {
+            display: flex;
+            gap: 8px;
+        }
+
         .reset-btn {
-            width: 100%;
+            flex: 1;
             background: #94a3b8;
             color: white;
             border: none;
@@ -407,16 +409,27 @@
             font-size: 0.85rem;
         }
 
-        /* 手機板限定：讓側邊欄優化排列，並把「即時計算與結算欄」置頂固定，方便邊滑邊看 */
+        .undo-btn {
+            flex: 1;
+            background: #e2e8f0;
+            color: #4a5568;
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .undo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* 手機與平板直向（置頂看板配置優化） */
         @media (max-width: 1023px) {
-            body { padding-top: 135px; } /* 留空間給置頂的看板 */
+            body { padding-top: 175px; } /* 留空間給置頂的手機看板（因增加了役名，稍微增高高度） */
             header { margin-bottom: 15px; }
             
             .sidebar {
                 position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
+                top: 0; left: 0; right: 0;
                 width: 100%;
                 z-index: 999;
                 border-radius: 0 0 12px 12px;
@@ -425,15 +438,24 @@
                 gap: 6px;
                 background: #ffffff;
                 display: grid;
-                grid-template-columns: 1.2fr 1fr; /* 左邊顯示狀態與按鈕，右邊顯示點數計算 */
+                grid-template-columns: 1.1fr 1fr; /* 左右並排配置 */
             }
 
-            .sidebar h2, .sidebar .game-setup, .sidebar .reset-btn {
-                display: none; /* 在選牌畫面隱藏設定和重置鈕，節省手機空間 */
+            .sidebar h2 { display: none; } /* 隱藏大標題 */
+
+            /* 手機版對局設定改到最下方獨立區塊 */
+            .sidebar .game-setup {
+                grid-column: span 2;
+                order: 10; /* 強制排在最下面 */
             }
 
-            /* 如果想顯示重置鈕，可以把它移入計分區，這邊先優化最常用功能 */
-            .sidebar .scoreboard { padding: 6px; }
+            .toggle-setup-btn {
+                grid-column: span 2;
+                order: 9;
+                margin-top: 2px;
+            }
+
+            .sidebar .scoreboard { padding: 4px; }
             .sidebar .round-display { margin-bottom: 2px; font-size: 0.85rem; }
             .sidebar .p-score { font-size: 1.1rem; }
             .sidebar .player-score-box { padding: 4px; }
@@ -442,7 +464,19 @@
             .sidebar .settle-btn { padding: 6px; font-size: 0.75rem; }
             
             .sidebar .stats { padding: 4px 6px; font-size: 0.75rem; }
-            .sidebar .results-list { display: none; } /* 手機版隱藏役列表節省空間 */
+            
+            /* 解放手機版的役名清單，讓它顯示，但限制高度避免佔用過多空間 */
+            .sidebar .results-list { 
+                display: block !important; 
+                max-height: 50px; 
+                font-size: 0.75rem;
+                border: 1px solid #edf2f4;
+                padding: 2px;
+                background: #fafafa;
+                border-radius: 4px;
+            }
+            .sidebar .result-item { padding: 2px 0; font-size: 0.75rem; }
+            .sidebar .no-yaku { padding-top: 4px; font-size: 0.75rem; }
             
             .sidebar .total-section { 
                 display: flex; 
@@ -452,11 +486,14 @@
             }
             .sidebar .final-score { font-size: 1.1rem; }
             .sidebar .raw-score { font-size: 0.7rem; }
-            
-            /* 讓手機版對局設定在最下方提供一個獨立按鈕（選配，此處先保持簡潔） */
+
+            .sidebar .control-buttons-row {
+                grid-column: span 2;
+                order: 8;
+            }
         }
 
-        /* 隱藏/顯示自訂對話框的樣式 */
+        /* 彈出視窗樣式 */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -484,12 +521,23 @@
         }
         .modal-box h3 { margin-bottom: 8px; color: var(--dark-color); font-size: 1.1rem; }
         .modal-box p { font-size: 0.85rem; color: #64748b; margin-bottom: 15px; line-height: 1.4; }
-        .modal-choice-btns { display: flex; gap: 10px; justify-content: center; }
+        .modal-choice-btns { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
         .modal-choice-btns button {
             flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 0.9rem;
         }
         .btn-p1-choice { background: #3a86ff; }
         .btn-p2-choice { background: #8338ec; }
+        .btn-modal-cancel {
+            width: 100%;
+            background: #e2e8f0;
+            color: #4a5568;
+            border: 1px solid #cbd5e1;
+            padding: 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
     </style>
 </head>
 <body>
@@ -503,8 +551,9 @@
         <div class="board" id="board"></div>
 
         <div class="sidebar">
-            <h2>對局設定</h2>
-            <div class="game-setup" id="setup-area">
+            <button class="toggle-setup-btn" onclick="toggleSetupMenu()">⚙️ 展開/收合對局設定</button>
+            
+            <div class="game-setup collapsed" id="setup-area">
                 <div class="setup-row">
                     <input type="text" id="p1-input" value="玩家 A" placeholder="玩家 A 名稱">
                     <input type="text" id="p2-input" value="玩家 B" placeholder="玩家 B 名稱">
@@ -517,9 +566,10 @@
                         <option value="12" selected>12 局 (一年勝負)</option>
                     </select>
                 </div>
-                <button class="start-btn" onclick="startGame()">開始新遊戲</button>
+                <button class="start-btn" onclick="startGame()">套用設定並重開對局</button>
             </div>
 
+            <!-- 狀態看板 -->
             <div class="scoreboard">
                 <div class="round-display" id="round-title">未開始遊戲</div>
                 <div class="players-scores">
@@ -534,6 +584,7 @@
                 </div>
             </div>
 
+            <!-- 登錄按鈕 -->
             <div class="settle-section">
                 <div class="settle-buttons-row">
                     <button class="settle-btn p1" id="settle-p1-btn" onclick="settleRound(1)" disabled>← A 勝</button>
@@ -542,6 +593,7 @@
                 <button class="settle-btn draw" id="settle-draw-btn" onclick="handleDrawGame()" disabled>無役/流局結算</button>
             </div>
 
+            <!-- 計分統計 -->
             <div class="stats">
                 <div>光:<span id="cnt-goko">0</span></div>
                 <div>種:<span id="cnt-tane">0</span></div>
@@ -549,20 +601,27 @@
                 <div>粕:<span id="cnt-kasu">0</span></div>
             </div>
 
+            <!-- 役名清單（手機版已解放） -->
             <div class="results-list" id="results-list">
                 <div class="no-yaku">尚未達成任何役</div>
             </div>
 
+            <!-- 總計分 -->
             <div class="total-section">
                 <div class="raw-score" id="raw-score">基礎：0 點</div>
                 <div class="final-score" id="final-score">0 點</div>
                 <div id="multiplier-container"></div>
             </div>
 
-            <button class="reset-btn" onclick="resetCurrentBoard()">重選本局牌面</button>
+            <!-- 功能控制列：重選與悔步 -->
+            <div class="control-buttons-row">
+                <button class="reset-btn" onclick="resetCurrentBoard()">重選本局</button>
+                <button class="undo-btn" id="undo-btn" onclick="undoLastRound()" disabled>↩ 回上局</button>
+            </div>
         </div>
     </div>
 
+    <!-- 流局彈出視窗（已加取消功能） -->
     <div class="modal-overlay" id="draw-modal">
         <div class="modal-box">
             <h3>🎴 本局無役流局</h3>
@@ -571,6 +630,7 @@
                 <button class="btn-p1-choice" id="modal-p1-btn" onclick="settleDrawWinner(1)">玩家 A</button>
                 <button class="btn-p2-choice" id="modal-p2-btn" onclick="settleDrawWinner(2)">玩家 B</button>
             </div>
+            <button class="btn-modal-cancel" onclick="closeDrawModal()">關閉/取消誤觸</button>
         </div>
     </div>
 
@@ -635,6 +695,14 @@
         let p1Score = 0;
         let p2Score = 0;
         let currentCalculatedPoints = 0; 
+
+        // 紀錄上一局狀態用於「悔步」
+        let historyState = null;
+
+        function toggleSetupMenu() {
+            const menu = document.getElementById('setup-area');
+            menu.classList.toggle('collapsed');
+        }
 
         function initBoard() {
             const board = document.getElementById('board');
@@ -704,6 +772,7 @@
             p1Score = 0;
             p2Score = 0;
             gameActive = true;
+            historyState = null; // 清空歷史
 
             document.getElementById('p1-label').innerText = p1Name;
             document.getElementById('p2-label').innerText = p2Name;
@@ -712,20 +781,52 @@
             document.getElementById('p1-score').innerText = '0';
             document.getElementById('p2-score').innerText = '0';
             
-            // 手機版按鈕字樣同步
             const isMobile = window.innerWidth < 1024;
             document.getElementById('settle-p1-btn').innerText = isMobile ? `← A 勝` : `← 登記 ${p1Name} 勝`;
             document.getElementById('settle-p2-btn').innerText = isMobile ? `B 勝 →` : `登記 ${p2Name} 勝 →`;
 
             updateRoundUI();
             resetCurrentBoard();
+            
+            // 手機版按套用設定後，自動把選單縮合起來
+            if(isMobile) {
+                document.getElementById('setup-area').classList.add('collapsed');
+            }
+        }
+
+        function saveHistory() {
+            historyState = {
+                currentRound: currentRound,
+                p1Score: p1Score,
+                p2Score: p2Score,
+                gameActive: gameActive
+            };
+            document.getElementById('undo-btn').disabled = false;
+        }
+
+        function undoLastRound() {
+            if (!historyState) return;
+            currentRound = historyState.currentRound;
+            p1Score = historyState.p1Score;
+            p2Score = historyState.p2Score;
+            gameActive = historyState.gameActive;
+
+            document.getElementById('p1-score').innerText = p1Score;
+            document.getElementById('p2-score').innerText = p2Score;
+            
+            historyState = null; // 只能悔步一次
+            document.getElementById('undo-btn').disabled = true;
+
+            updateRoundUI();
+            resetCurrentBoard();
+            alert("已成功退回到上一回合的積分狀態。");
         }
 
         function updateRoundUI() {
             if(gameActive) {
                 document.getElementById('round-title').innerText = `第 ${currentRound}/${totalRounds} 局`;
             } else {
-                document.getElementById('round-title').innerText = `遊戲未開始`;
+                document.getElementById('round-title').innerText = `對局結束`;
             }
             updateSettleButtonsState();
         }
@@ -758,6 +859,7 @@
 
         function settleRound(winner) {
             if (!gameActive || currentCalculatedPoints <= 0) return;
+            saveHistory(); // 結算前先存檔
             addPointsToPlayer(winner, currentCalculatedPoints);
         }
 
@@ -766,8 +868,13 @@
             document.getElementById('draw-modal').classList.add('active');
         }
 
-        function settleDrawWinner(winnerIdx) {
+        function closeDrawModal() {
             document.getElementById('draw-modal').classList.remove('active');
+        }
+
+        function settleDrawWinner(winnerIdx) {
+            closeDrawModal();
+            saveHistory(); // 結算前先存檔
             addPointsToPlayer(winnerIdx, 6);
         }
 
@@ -929,7 +1036,6 @@
             startGame(); 
         };
         
-        // 監聽視窗縮放，動態調整按鈕文字長度
         window.onresize = () => {
             updateSettleButtonsState();
         };
