@@ -70,27 +70,39 @@
                 position: sticky;
                 top: 20px;
             }
-            /* 手機與平板直向排版（寬度小於 1024px） */
+            /* 強制修正手機與平板直向看不到設定欄的問題 */
 @media (max-width: 1023px) {
-  .container {
-    display: flex !important;
-    flex-direction: column !important; /* 讓大牌組區和側邊設定欄上下堆疊 */
-    align-items: center !important;
+  
+  /* 1. 確保最外層容器允許內容往下延伸，不切掉畫面 */
+  html, body, .container {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
+    display: block !important; /* 暫時取消 flex 改用區塊排列 */
   }
 
+  /* 2. 確保牌桌區寬度正常 */
   .board {
     width: 100% !important;
+    display: block !important;
   }
 
+  /* 3. 強制讓隱藏的側邊欄（輸入名字與局數的地方）復活 */
   .sidebar {
+    display: block !important;      /* 強制顯示（防止被設為 none） */
+    visibility: visible !important; /* 強制可見（防止被設為 hidden） */
+    opacity: 1 !important;          /* 強制不透明 */
+    
     width: 100% !important;
-    max-width: 500px; /* 限制最大寬度，在手機上比較美觀 */
-    margin-top: 20px !important; /* 與上方的大牌組區空出距離 */
-    position: relative !important;
+    max-width: 480px !important;    /* 限制手機上的最大寬度 */
+    margin: 30px auto !important;   /* 自動置中，並與上方牌桌空出距離 */
+    
+    position: relative !important;  /* 取消大螢幕的固定定位 */
     top: 0 !important;
-    display: block !important; /* 強制讓它顯示出來 */
-    z-index: 999 !important;
+    clear: both !important;         /* 阻擋任何浮動干擾 */
+    z-index: 9999 !important;       /* 確保圖層在最上層 */
   }
+}
 }
         }
 
