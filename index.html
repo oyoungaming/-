@@ -584,7 +584,7 @@
             <div class="settle-section">
                 <div class="settle-buttons-row">
                     <button class="settle-btn p1" id="settle-p1-btn" onclick="openSettleModal(1)" disabled>← A 勝</button>
-                    <button class="settle-btn p2" id="settle-p2-btn" onclick="openSettleModal(2)" disabled>B 勝 →</button>
+                    <button class="settle-btn p2" id="settle-btn-p2" onclick="openSettleModal(2)" disabled>B 勝 →</button>
                 </div>
                 <button class="settle-btn draw" id="settle-draw-btn" onclick="handleDrawGame()" disabled>無役/流局結算</button>
             </div>
@@ -675,11 +675,11 @@
             { id: 34, month: 9,  name: "菊上青短", type: "青短" },
             { id: 35, month: 9,  name: "菊皮1", type: "粕" },
             { id: 36, month: 9,  name: "菊皮2", type: "粕" },
-            { id: 41, month: 11, name: "柳間小野道風", type: "光" },
             { id: 37, month: 10, name: "紅葉間鹿", type: "種" },
             { id: 38, month: 10, name: "紅葉青短", type: "青短" },
             { id: 39, month: 10, name: "紅葉皮1", type: "粕" },
             { id: 40, month: 10, name: "紅葉皮2", type: "粕" },
+            { id: 41, month: 11, name: "柳間小野道風", type: "光" },
             { id: 42, month: 11, name: "柳上燕", type: "種" },
             { id: 43, month: 11, name: "柳上短冊", type: "短冊" },
             { id: 44, month: 11, name: "柳皮(雷)", type: "粕" },
@@ -699,7 +699,7 @@
         let p2Score = 0;
         let currentCalculatedPoints = 0; 
         
-        let pendingWinner = null; // 用來暫存當前點選勝出的玩家 (1 或 2)
+        let pendingWinner = null; 
 
         let historyState = null;
 
@@ -787,7 +787,7 @@
             
             const isMobile = window.innerWidth < 1024;
             document.getElementById('settle-p1-btn').innerText = isMobile ? `← A 勝` : `← 登記 ${p1Name} 勝`;
-            document.getElementById('settle-p2-btn').innerText = isMobile ? `B 勝 →` : `登記 ${p2Name} 勝 →`;
+            document.getElementById('settle-btn-p2').innerText = isMobile ? `B 勝 →` : `登記 ${p2Name} 勝 →`;
 
             updateRoundUI();
             resetCurrentBoard();
@@ -836,7 +836,7 @@
 
         function updateSettleButtonsState() {
             const btn1 = document.getElementById('settle-p1-btn');
-            const btn2 = document.getElementById('settle-p2-btn');
+            const btn2 = document.getElementById('settle-btn-p2');
             const drawBtn = document.getElementById('settle-draw-btn');
             const isMobile = window.innerWidth < 1024;
 
@@ -860,14 +860,13 @@
             }
         }
 
-        // 新增：打開勝方結算對話框
         function openSettleModal(winner) {
             if (!gameActive || currentCalculatedPoints <= 0) return;
-            pendingWinner = winner;
+            pendingWinner = winner; // 1代表P1(A)，2代表P2(B)
             const targetName = winner === 1 ? p1Name : p2Name;
             
             document.getElementById('settle-modal-title').innerText = `🏆 登記【${targetName}】勝出`;
-            document.getElementById('settle-modal-desc').innerHTML = `本局計算之基本得分為 <strong>${currentCalculatedPoints} 點</strong>。<br>此對局中是否有因「来い来い」導致得分需要加倍？`;
+            document.getElementById('settle-modal-desc').innerHTML = `本局計算之基本得分為 <strong>${currentCalculatedPoints} 點</strong>。<br>此對局中是否有因「来い来い (來來)」導致得分需要加倍？`;
             
             document.getElementById('settle-normal-btn').innerText = `一般結算 (+${currentCalculatedPoints} 點)`;
             document.getElementById('settle-double-btn').innerText = `來來加倍 (+${currentCalculatedPoints * 2} 點)`;
@@ -880,14 +879,14 @@
             pendingWinner = null;
         }
 
-        // 新增：確認選擇倍率並加分
         function confirmSettle(multiplier) {
             if (pendingWinner === null) return;
             const finalScoreToAdd = currentCalculatedPoints * multiplier;
             
+            const targetWinner = pendingWinner; // 保留正確的贏家編號
             closeSettleModal();
-            saveHistory(); // 存檔供悔步
-            addPointsToPlayer(pendingWinner, finalScoreToAdd);
+            saveHistory(); 
+            addPointsToPlayer(targetWinner, finalScoreToAdd); // 確保傳入正確的 1 或 2
         }
 
         function handleDrawGame() {
