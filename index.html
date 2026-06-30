@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>来い来い役算機 & 記分板</title>
@@ -69,6 +70,28 @@
                 position: sticky;
                 top: 20px;
             }
+            /* 手機與平板直向排版（寬度小於 1024px） */
+@media (max-width: 1023px) {
+  .container {
+    display: flex !important;
+    flex-direction: column !important; /* 讓大牌組區和側邊設定欄上下堆疊 */
+    align-items: center !important;
+  }
+
+  .board {
+    width: 100% !important;
+  }
+
+  .sidebar {
+    width: 100% !important;
+    max-width: 500px; /* 限制最大寬度，在手機上比較美觀 */
+    margin-top: 20px !important; /* 與上方的大牌組區空出距離 */
+    position: relative !important;
+    top: 0 !important;
+    display: block !important; /* 強制讓它顯示出來 */
+    z-index: 999 !important;
+  }
+}
         }
 
         /* 左側大牌組區 */
