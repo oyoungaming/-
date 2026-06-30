@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>来い来い役算機 & 記分板</title>
     <style>
         :root {
@@ -26,7 +26,7 @@
         body {
             background-color: var(--bg-color);
             color: var(--dark-color);
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -34,18 +34,18 @@
 
         header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         header h1 {
-            font-size: 2rem;
+            font-size: 1.8rem;
             color: var(--primary-color);
             margin-bottom: 5px;
         }
 
         header p {
             color: #666;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .container {
@@ -56,37 +56,45 @@
             gap: 20px;
         }
 
-        @media (min-width: 1100px) {
+        /* 桌機與平板排版 */
+        @media (min-width: 1024px) {
+            body { padding: 20px; }
             .container {
                 flex-direction: row;
                 align-items: flex-start;
+            }
+            .board { flex: 2.5; }
+            .sidebar { 
+                flex: 1; 
+                position: sticky;
+                top: 20px;
             }
         }
 
         /* 左側大牌組區 */
         .board {
-            flex: 3;
             background: var(--card-bg);
-            padding: 25px;
+            padding: 15px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-            gap: 30px;
+            gap: 20px;
+            width: 100%;
         }
 
         .half-year-row {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             background: #f8fafc;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             border: 1px solid #e2e8f0;
         }
 
         .half-year-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
             color: var(--dark-color);
             padding-left: 5px;
@@ -95,18 +103,27 @@
 
         .months-flex {
             display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 當螢幕夠寬時，月份群組可以並排 */
+        @media (min-width: 640px) {
+            .months-flex {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 12px;
+            }
         }
 
         .month-group {
             display: flex;
             background: #ffffff;
-            padding: 10px;
+            padding: 8px;
             border-radius: 8px;
             border: 1px solid #edf2f4;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .month-label {
@@ -114,20 +131,23 @@
             font-weight: bold;
             color: #4a5568;
             text-align: center;
-            font-size: 1rem;
+            font-size: 0.9rem;
             border-right: 2px solid #e2e8f0;
-            padding-right: 8px;
+            padding-right: 6px;
+            flex-shrink: 0;
         }
 
         .cards-container {
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            flex: 1;
         }
 
-        /* 花牌卡片樣式 */
+        /* 花牌卡片自適應樣式 */
         .card {
-            width: 85px;
-            height: 130px;
+            flex: 1;
+            max-width: 85px;
+            aspect-ratio: 1 / 1.5; /* 鎖定花札經典的 1:1.5 比例 */
             border: 2px solid #cbd5e1;
             border-radius: 6px;
             cursor: pointer;
@@ -139,26 +159,27 @@
         }
 
         .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
 
         .card.selected {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.4);
+            box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.4);
         }
 
         .card .card-type {
             position: absolute;
-            bottom: 4px;
-            right: 4px;
-            font-size: 0.65rem;
-            padding: 1px 4px;
+            bottom: 2px;
+            right: 2px;
+            font-size: 0.55rem;
+            padding: 1px 3px;
             border-radius: 3px;
             color: white;
             z-index: 2;
             font-weight: bold;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            transform: scale(0.9);
         }
 
         .card[data-type="光"] .card-type { background: var(--gold); color: #000; }
@@ -181,21 +202,19 @@
 
         /* 右側結算與記分板面板 */
         .sidebar {
-            flex: 1;
             background: var(--card-bg);
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            position: sticky;
-            top: 20px;
             display: flex;
             flex-direction: column;
             gap: 15px;
+            width: 100%;
         }
 
         .sidebar h2 {
-            font-size: 1.3rem;
-            padding-bottom: 8px;
+            font-size: 1.1rem;
+            padding-bottom: 5px;
             border-bottom: 2px solid var(--dark-color);
         }
 
@@ -204,7 +223,7 @@
             background: #f1f5f9;
             padding: 12px;
             border-radius: 8px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
         .setup-row {
             display: flex;
@@ -218,6 +237,8 @@
             padding: 6px;
             border: 1px solid #cbd5e1;
             border-radius: 4px;
+            font-size: 0.85rem;
+            width: 100%;
         }
         .start-btn {
             width: 100%;
@@ -234,29 +255,30 @@
         /* 狀態與計分看板 */
         .scoreboard {
             background: #e2e8f0;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
             text-align: center;
         }
         .round-display {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: bold;
             color: var(--dark-color);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .players-scores {
             display: flex;
             justify-content: space-around;
+            gap: 8px;
         }
         .player-score-box {
             background: white;
-            padding: 10px;
+            padding: 8px;
             border-radius: 6px;
-            width: 45%;
+            flex: 1;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .p-name {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #64748b;
             font-weight: bold;
             white-space: nowrap;
@@ -264,7 +286,7 @@
             text-overflow: ellipsis;
         }
         .p-score {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 800;
             color: var(--primary-color);
         }
@@ -273,21 +295,21 @@
         .settle-section {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
         }
         .settle-buttons-row {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
         .settle-btn {
             flex: 1;
             color: white;
             border: none;
-            padding: 11px;
+            padding: 10px;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             transition: opacity 0.2s;
         }
         .settle-btn.p1 { background: #3a86ff; }
@@ -298,7 +320,7 @@
         .stats {
             display: flex;
             justify-content: space-between;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             background: #f8fafc;
             padding: 8px;
             border-radius: 6px;
@@ -306,8 +328,8 @@
         }
 
         .results-list {
-            min-height: 100px;
-            max-height: 180px;
+            min-height: 60px;
+            max-height: 140px;
             overflow-y: auto;
             border-bottom: 1px solid #edf2f4;
         }
@@ -316,29 +338,29 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 0;
+            padding: 5px 0;
             border-bottom: 1px dashed #cbd5e1;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .result-item .yaku-name { font-weight: 600; }
         .result-item .yaku-pts { color: var(--primary-color); font-weight: bold; }
-        .no-yaku { color: #94a3b8; text-align: center; padding-top: 10px; font-style: italic; font-size: 0.9rem; }
+        .no-yaku { color: #94a3b8; text-align: center; padding-top: 8px; font-style: italic; font-size: 0.85rem; }
 
         .total-section {
             text-align: right;
         }
 
-        .raw-score { font-size: 0.9rem; color: #64748b; }
-        .final-score { font-size: 1.6rem; font-weight: 800; color: var(--dark-color); }
+        .raw-score { font-size: 0.8rem; color: #64748b; }
+        .final-score { font-size: 1.4rem; font-weight: 800; color: var(--dark-color); }
 
         .multiplier-badge {
             display: inline-block;
             background: var(--primary-color);
             color: white;
-            padding: 3px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: bold;
             margin-top: 3px;
         }
@@ -348,11 +370,60 @@
             background: #94a3b8;
             color: white;
             border: none;
-            padding: 10px;
+            padding: 8px;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+        }
+
+        /* 手機板限定：讓側邊欄優化排列，並把「即時計算與結算欄」置頂固定，方便邊滑邊看 */
+        @media (max-width: 1023px) {
+            body { padding-top: 135px; } /* 留空間給置頂的看板 */
+            header { margin-bottom: 15px; }
+            
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                z-index: 999;
+                border-radius: 0 0 12px 12px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+                padding: 8px 12px;
+                gap: 6px;
+                background: #ffffff;
+                display: grid;
+                grid-template-columns: 1.2fr 1fr; /* 左邊顯示狀態與按鈕，右邊顯示點數計算 */
+            }
+
+            .sidebar h2, .sidebar .game-setup, .sidebar .reset-btn {
+                display: none; /* 在選牌畫面隱藏設定和重置鈕，節省手機空間 */
+            }
+
+            /* 如果想顯示重置鈕，可以把它移入計分區，這邊先優化最常用功能 */
+            .sidebar .scoreboard { padding: 6px; }
+            .sidebar .round-display { margin-bottom: 2px; font-size: 0.85rem; }
+            .sidebar .p-score { font-size: 1.1rem; }
+            .sidebar .player-score-box { padding: 4px; }
+            
+            .sidebar .settle-section { gap: 4px; }
+            .sidebar .settle-btn { padding: 6px; font-size: 0.75rem; }
+            
+            .sidebar .stats { padding: 4px 6px; font-size: 0.75rem; }
+            .sidebar .results-list { display: none; } /* 手機版隱藏役列表節省空間 */
+            
+            .sidebar .total-section { 
+                display: flex; 
+                flex-direction: column; 
+                justify-content: center;
+                align-items: flex-end;
+            }
+            .sidebar .final-score { font-size: 1.1rem; }
+            .sidebar .raw-score { font-size: 0.7rem; }
+            
+            /* 讓手機版對局設定在最下方提供一個獨立按鈕（選配，此處先保持簡潔） */
         }
 
         /* 隱藏/顯示自訂對話框的樣式 */
@@ -363,7 +434,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 10000;
             visibility: hidden;
             opacity: 0;
             transition: all 0.2s ease;
@@ -374,18 +445,18 @@
         }
         .modal-box {
             background: white;
-            padding: 25px;
+            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            max-width: 400px;
+            max-width: 340px;
             width: 90%;
             text-align: center;
         }
-        .modal-box h3 { margin-bottom: 12px; color: var(--dark-color); }
-        .modal-box p { font-size: 0.95rem; color: #64748b; margin-bottom: 20px; line-height: 1.4; }
+        .modal-box h3 { margin-bottom: 8px; color: var(--dark-color); font-size: 1.1rem; }
+        .modal-box p { font-size: 0.85rem; color: #64748b; margin-bottom: 15px; line-height: 1.4; }
         .modal-choice-btns { display: flex; gap: 10px; justify-content: center; }
         .modal-choice-btns button {
-            flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white;
+            flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; font-size: 0.9rem;
         }
         .btn-p1-choice { background: #3a86ff; }
         .btn-p2-choice { background: #8338ec; }
@@ -419,7 +490,6 @@
                 <button class="start-btn" onclick="startGame()">開始新遊戲</button>
             </div>
 
-            <h2>對局狀態</h2>
             <div class="scoreboard">
                 <div class="round-display" id="round-title">未開始遊戲</div>
                 <div class="players-scores">
@@ -434,21 +504,19 @@
                 </div>
             </div>
 
-            <h2>本局得分登錄</h2>
             <div class="settle-section">
                 <div class="settle-buttons-row">
-                    <button class="settle-btn p1" id="settle-p1-btn" onclick="settleRound(1)" disabled>← 登記 玩家 A 勝</button>
-                    <button class="settle-btn p2" id="settle-p2-btn" onclick="settleRound(2)" disabled>登記 玩家 B 勝 →</button>
+                    <button class="settle-btn p1" id="settle-p1-btn" onclick="settleRound(1)" disabled>← A 勝</button>
+                    <button class="settle-btn p2" id="settle-p2-btn" onclick="settleRound(2)" disabled>B 勝 →</button>
                 </div>
-                <button class="settle-btn draw" id="settle-draw-btn" onclick="handleDrawGame()" disabled>無役 / 來來流局結算</button>
+                <button class="settle-btn draw" id="settle-draw-btn" onclick="handleDrawGame()" disabled>無役/流局結算</button>
             </div>
 
-            <h2>當前牌面計算</h2>
             <div class="stats">
-                <div>光: <span id="cnt-goko">0</span></div>
-                <div>種: <span id="cnt-tane">0</span></div>
-                <div>短冊: <span id="cnt-tan">0</span></div>
-                <div>粕: <span id="cnt-kasu">0</span></div>
+                <div>光:<span id="cnt-goko">0</span></div>
+                <div>種:<span id="cnt-tane">0</span></div>
+                <div>短:<span id="cnt-tan">0</span></div>
+                <div>粕:<span id="cnt-kasu">0</span></div>
             </div>
 
             <div class="results-list" id="results-list">
@@ -456,8 +524,8 @@
             </div>
 
             <div class="total-section">
-                <div class="raw-score" id="raw-score">基礎總計：0 點</div>
-                <div class="final-score" id="final-score">0 點 (文)</div>
+                <div class="raw-score" id="raw-score">基礎：0 點</div>
+                <div class="final-score" id="final-score">0 點</div>
                 <div id="multiplier-container"></div>
             </div>
 
@@ -468,7 +536,7 @@
     <div class="modal-overlay" id="draw-modal">
         <div class="modal-box">
             <h3>🎴 本局無役流局</h3>
-            <p>雙方玩家皆無達成役，或是喊了「來來」後流局。<br>依規則將由<strong>當局莊家（親）獲得 6 點</strong>。<br>請點選誰是這一局的莊家：</p>
+            <p>雙方無達成役或來來流局。<br>依規則由<strong>當局莊家（親）獲得 6 點</strong>。<br>請點選誰是這一局的莊家：</p>
             <div class="modal-choice-btns">
                 <button class="btn-p1-choice" id="modal-p1-btn" onclick="settleDrawWinner(1)">玩家 A</button>
                 <button class="btn-p2-choice" id="modal-p2-btn" onclick="settleDrawWinner(2)">玩家 B</button>
@@ -614,13 +682,18 @@
             document.getElementById('p1-score').innerText = '0';
             document.getElementById('p2-score').innerText = '0';
             
+            // 手機版按鈕字樣同步
+            const isMobile = window.innerWidth < 1024;
+            document.getElementById('settle-p1-btn').innerText = isMobile ? `← A 勝` : `← 登記 ${p1Name} 勝`;
+            document.getElementById('settle-p2-btn').innerText = isMobile ? `B 勝 →` : `登記 ${p2Name} 勝 →`;
+
             updateRoundUI();
             resetCurrentBoard();
         }
 
         function updateRoundUI() {
             if(gameActive) {
-                document.getElementById('round-title').innerText = `第 ${currentRound} / ${totalRounds} 局`;
+                document.getElementById('round-title').innerText = `第 ${currentRound}/${totalRounds} 局`;
             } else {
                 document.getElementById('round-title').innerText = `遊戲未開始`;
             }
@@ -631,19 +704,20 @@
             const btn1 = document.getElementById('settle-p1-btn');
             const btn2 = document.getElementById('settle-p2-btn');
             const drawBtn = document.getElementById('settle-draw-btn');
+            const isMobile = window.innerWidth < 1024;
 
             if(gameActive) {
-                drawBtn.disabled = false; // 遊戲進行中隨時可以宣告流局
+                drawBtn.disabled = false;
                 if(currentCalculatedPoints > 0) {
                     btn1.disabled = false;
                     btn2.disabled = false;
-                    btn1.innerText = `← ${p1Name} 獲勝 (+${currentCalculatedPoints}點)`;
-                    btn2.innerText = `由 ${p2Name} 獲勝 (+${currentCalculatedPoints}點) →`;
+                    btn1.innerText = isMobile ? `← A 勝 (+${currentCalculatedPoints})` : `← ${p1Name} 獲勝 (+${currentCalculatedPoints}點)`;
+                    btn2.innerText = isMobile ? `B 勝 (+${currentCalculatedPoints}) →` : `由 ${p2Name} 獲勝 (+${currentCalculatedPoints}點) →`;
                 } else {
                     btn1.disabled = true;
                     btn2.disabled = true;
-                    btn1.innerText = `← 登記 ${p1Name} 勝`;
-                    btn2.innerText = `登記 ${p2Name} 勝 →`;
+                    btn1.innerText = isMobile ? `← A 勝` : `← 登記 ${p1Name} 勝`;
+                    btn2.innerText = isMobile ? `B 勝 →` : `登記 ${p2Name} 勝 →`;
                 }
             } else {
                 btn1.disabled = true;
@@ -652,27 +726,21 @@
             }
         }
 
-        // 處理有胡牌時的常規結算
         function settleRound(winner) {
             if (!gameActive || currentCalculatedPoints <= 0) return;
             addPointsToPlayer(winner, currentCalculatedPoints);
         }
 
-        // 點選流局結算：跳出自訂對話框
         function handleDrawGame() {
             if (!gameActive) return;
             document.getElementById('draw-modal').classList.add('active');
         }
 
-        // 對話框點選莊家後的計分處理
         function settleDrawWinner(winnerIdx) {
-            // 關閉對話框
             document.getElementById('draw-modal').classList.remove('active');
-            // 莊家依規則直接加 6 點
             addPointsToPlayer(winnerIdx, 6);
         }
 
-        // 統一的分數灌入與局數推進邏輯
         function addPointsToPlayer(playerIdx, points) {
             if (playerIdx === 1) {
                 p1Score += points;
@@ -682,17 +750,16 @@
                 document.getElementById('p2-score').innerText = p2Score;
             }
 
-            // 檢查是否達到終局
             if (currentRound >= totalRounds) {
                 gameActive = false;
                 let finalWinner = p1Score > p2Score ? p1Name : (p2Score > p1Score ? p2Name : "雙方平手");
                 alert(`🎉 遊戲結束！\n【${p1Name}】總分：${p1Score} 點\n【${p2Name}】總分：${p2Score} 點\n恭喜最高分者：${finalWinner}！`);
-                document.getElementById('round-title').innerText = `對局結束！🏆 勝者：${finalWinner}`;
+                document.getElementById('round-title').innerText = `🏆 勝者：${finalWinner}`;
                 updateSettleButtonsState();
             } else {
                 currentRound++;
                 updateRoundUI();
-                resetCurrentBoard(); // 自動清空牌面進入下一局
+                resetCurrentBoard();
             }
         }
 
@@ -729,7 +796,6 @@
             let yakuResults = [];
             let totalPoints = 0;
 
-            // 1. 光牌判定
             const hasMichikaze = gokoCards.some(c => c.id === 41);
             if (gokoCards.length === 5) {
                 yakuResults.push({ name: "五光", pts: 10 });
@@ -745,14 +811,12 @@
                 }
             }
 
-            // 2. 杯酒判定
             const hasSake = currentCards.some(c => c.id === 33);
             const hasMaku = currentCards.some(c => c.id === 9);
             const hasTsuki = currentCards.some(c => c.id === 29);
             if (hasSake && hasMaku) yakuResults.push({ name: "花見で一杯", pts: 5 });
             if (hasSake && hasTsuki) yakuResults.push({ name: "月見で一杯", pts: 5 });
 
-            // 3. 短冊判定
             const akaCount = currentCards.filter(c => c.type === "赤短").length;
             const aoCount = currentCards.filter(c => c.type === "青短").length;
             let hasSpecialTan = false;
@@ -775,7 +839,6 @@
                 yakuResults.push({ name: `短冊 (${tanAllCards.length}張)`, pts: 1 + (tanAllCards.length - 5) });
             }
 
-            // 4. 種牌判定
             const hasInu = currentCards.some(c => c.id === 25);
             const hasShika = currentCards.some(c => c.id === 37);
             const hasCho = currentCards.some(c => c.id === 21);
@@ -790,7 +853,6 @@
                 yakuResults.push({ name: `種 (${taneCards.length}張)`, pts: 1 + (taneCards.length - 5) });
             }
 
-            // 5. 粕牌判定
             if (kasuCards.length >= 10) {
                 yakuResults.push({ name: `カス (${kasuCards.length}張)`, pts: 1 + (kasuCards.length - 10) });
             }
@@ -800,8 +862,8 @@
 
             if (yakuResults.length === 0) {
                 resultsListEl.innerHTML = '<div class="no-yaku">尚未達成任何役</div>';
-                document.getElementById('raw-score').innerText = '基礎總計：0 點';
-                document.getElementById('final-score').innerText = '0 點 (文)';
+                document.getElementById('raw-score').innerText = '基礎：0 點';
+                document.getElementById('final-score').innerText = '0 點';
                 document.getElementById('multiplier-container').innerHTML = '';
                 currentCalculatedPoints = 0;
                 updateSettleButtonsState();
@@ -816,16 +878,16 @@
                 resultsListEl.appendChild(item);
             });
 
-            document.getElementById('raw-score').innerText = `基礎總計：${totalPoints} 點`;
+            document.getElementById('raw-score').innerText = `基礎：${totalPoints} 點`;
 
             const multiplierContainer = document.getElementById('multiplier-container');
             if (totalPoints >= 7) {
                 currentCalculatedPoints = totalPoints * 2;
-                document.getElementById('final-score').innerText = `${currentCalculatedPoints} 點 (文)`;
-                multiplierContainer.innerHTML = '<span class="multiplier-badge">🔥 滿 7 點得分翻倍 (x2)！</span>';
+                document.getElementById('final-score').innerText = `${currentCalculatedPoints} 點`;
+                multiplierContainer.innerHTML = '<span class="multiplier-badge">🔥 滿 7 點 x2！</span>';
             } else {
                 currentCalculatedPoints = totalPoints;
-                document.getElementById('final-score').innerText = `${currentCalculatedPoints} 點 (文)`;
+                document.getElementById('final-score').innerText = `${currentCalculatedPoints} 點`;
                 multiplierContainer.innerHTML = '';
             }
 
@@ -835,6 +897,11 @@
         window.onload = () => {
             initBoard();
             startGame(); 
+        };
+        
+        // 監聽視窗縮放，動態調整按鈕文字長度
+        window.onresize = () => {
+            updateSettleButtonsState();
         };
     </script>
 </body>
