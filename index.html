@@ -947,7 +947,7 @@
             const targetName = winner === 1 ? p1Name : p2Name;
             
             document.getElementById('settle-modal-title').innerText = `🏆 登記【${targetName}】勝出`;
-            document.getElementById('settle-modal-desc').innerHTML = `本局計算之基本得分為 <strong>${currentCalculatedPoints} 點</strong>。<br>此對局中是否有因「来い来い (來來)」導致得分需要加倍？`;
+            document.getElementById('settle-modal-desc').innerHTML = `本局計算之基本得分為 <strong>${currentCalculatedPoints} 點</strong>。<br>此對局中是否有因「来い来い」導致得分需要加倍？`;
             
             document.getElementById('settle-normal-btn').innerText = `一般結算 (+${currentCalculatedPoints} 點)`;
             document.getElementById('settle-double-btn').innerText = `來來加倍 (+${currentCalculatedPoints * 2} 點)`;
