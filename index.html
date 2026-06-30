@@ -237,7 +237,7 @@
             padding: 12px;
             border-radius: 8px;
             font-size: 0.85rem;
-            transition: max-height 0.3s ease, padding 0.3s ease;
+            transition: max-height 0.4s ease, padding 0.4s ease;
             overflow: hidden;
         }
         
@@ -264,6 +264,19 @@
             font-size: 0.85rem;
             width: 100%;
         }
+        .setup-checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            color: #334155;
+            font-weight: 600;
+        }
+        .setup-checkbox-row input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
         .start-btn {
             width: 100%;
             background: var(--dark-color);
@@ -273,7 +286,7 @@
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
-            margin-top: 5px;
+            margin-top: 8px;
         }
 
         /* 狀態與計分看板 */
@@ -536,6 +549,53 @@
             cursor: pointer;
             font-size: 0.85rem;
         }
+
+        /* 👑 新增：胡牌大役全螢幕特效動畫樣式 */
+        .yaku-anim-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none; /* 點擊穿透，不干擾使用者操作 */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .yaku-anim-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .yaku-anim-box {
+            text-align: center;
+            transform: scale(0.5);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .yaku-anim-overlay.show .yaku-anim-box {
+            transform: scale(1);
+        }
+        .yaku-anim-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #ffb703;
+            text-shadow: 0 0 20px #ffb703, 0 0 40px #e63946, 0 4px 10px rgba(0,0,0,0.9);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            animation: pulse-glow 1.5s infinite alternate;
+        }
+        .yaku-anim-subtitle {
+            font-size: 1.5rem;
+            color: #ffffff;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+        @keyframes pulse-glow {
+            from { transform: scale(1); text-shadow: 0 0 20px #ffb703, 0 0 30px #e63946; }
+            to { transform: scale(1.05); text-shadow: 0 0 30px #ffb703, 0 0 50px #ff0000; }
+        }
     </style>
 </head>
 <body>
@@ -563,6 +623,10 @@
                         <option value="6">6 局 (半載勝負)</option>
                         <option value="12" selected>12 局 (一年勝負)</option>
                     </select>
+                </div>
+                <div class="setup-checkbox-row">
+                    <input type="checkbox" id="enable-anim-checkbox" checked>
+                    <label for="enable-anim-checkbox">啟用大役達成畫面動畫效果</label>
                 </div>
                 <button class="start-btn" onclick="startGame()">套用設定並重開對局</button>
             </div>
@@ -637,6 +701,13 @@
         </div>
     </div>
 
+    <div class="yaku-anim-overlay" id="yaku-anim-screen">
+        <div class="yaku-anim-box">
+            <div class="yaku-anim-title" id="anim-yaku-name">赤短</div>
+            <div class="yaku-anim-subtitle" id="anim-yaku-desc">✨ 役 達 成 ✨</div>
+        </div>
+    </div>
+
     <script>
         const cardDatabase = [
             { id: 1,  month: 1,  name: "松上鶴", type: "光" },
@@ -700,8 +771,10 @@
         let currentCalculatedPoints = 0; 
         
         let pendingWinner = null; 
-
         let historyState = null;
+
+        // 👑 新增：紀錄本局已經播放過動畫的役名，防止點選延伸張時重複彈出
+        let triggeredAnimsInCurrentRound = new Set();
 
         function toggleSetupMenu() {
             const menu = document.getElementById('setup-area');
@@ -862,7 +935,7 @@
 
         function openSettleModal(winner) {
             if (!gameActive || currentCalculatedPoints <= 0) return;
-            pendingWinner = winner; // 1代表P1(A)，2代表P2(B)
+            pendingWinner = winner; 
             const targetName = winner === 1 ? p1Name : p2Name;
             
             document.getElementById('settle-modal-title').innerText = `🏆 登記【${targetName}】勝出`;
@@ -883,10 +956,10 @@
             if (pendingWinner === null) return;
             const finalScoreToAdd = currentCalculatedPoints * multiplier;
             
-            const targetWinner = pendingWinner; // 保留正確的贏家編號
+            const targetWinner = pendingWinner; 
             closeSettleModal();
             saveHistory(); 
-            addPointsToPlayer(targetWinner, finalScoreToAdd); // 確保傳入正確的 1 或 2
+            addPointsToPlayer(targetWinner, finalScoreToAdd); 
         }
 
         function handleDrawGame() {
@@ -939,8 +1012,30 @@
 
         function resetCurrentBoard() {
             selectedCards.clear();
+            triggeredAnimsInCurrentRound.clear(); // 新一局重設動畫觸發池
             document.querySelectorAll('.card').forEach(el => el.classList.remove('selected'));
             calculateScore();
+        }
+
+        // 👑 新增：觸發全螢幕大役動畫函數
+        function triggerYakuAnimation(yakuName) {
+            const isAnimEnabled = document.getElementById('enable-anim-checkbox').checked;
+            if (!isAnimEnabled) return; // 如果使用者關閉了動畫選項，直接返回
+
+            // 如果本局已經播過這個役的動畫，就不重複轟炸螢幕
+            if (triggeredAnimsInCurrentRound.has(yakuName)) return;
+            triggeredAnimsInCurrentRound.add(yakuName);
+
+            const overlay = document.getElementById('yaku-anim-screen');
+            const title = document.getElementById('anim-yaku-name');
+            
+            title.innerText = yakuName;
+            overlay.classList.add('show');
+
+            // 2 秒後自動隱藏
+            setTimeout(() => {
+                overlay.classList.remove('show');
+            }, 2000);
         }
 
         function calculateScore() {
@@ -959,27 +1054,40 @@
             let yakuResults = [];
             let totalPoints = 0;
 
+            // 判斷五光系列
             const hasMichikaze = gokoCards.some(c => c.id === 41);
             if (gokoCards.length === 5) {
                 yakuResults.push({ name: "五光", pts: 10 });
+                triggerYakuAnimation("五光");
             } else if (gokoCards.length === 4) {
                 if (hasMichikaze) {
                     yakuResults.push({ name: "雨四光", pts: 7 });
+                    triggerYakuAnimation("雨四光");
                 } else {
                     yakuResults.push({ name: "四光", pts: 8 });
+                    triggerYakuAnimation("四光");
                 }
             } else if (gokoCards.length === 3) {
                 if (!hasMichikaze) {
                     yakuResults.push({ name: "三光", pts: 5 });
+                    triggerYakuAnimation("三光");
                 }
             }
 
+            // 酒系列 (月見/花見)
             const hasSake = currentCards.some(c => c.id === 33);
             const hasMaku = currentCards.some(c => c.id === 9);
             const hasTsuki = currentCards.some(c => c.id === 29);
-            if (hasSake && hasMaku) yakuResults.push({ name: "花見で一杯", pts: 5 });
-            if (hasSake && hasTsuki) yakuResults.push({ name: "月見で一杯", pts: 5 });
+            if (hasSake && hasMaku) {
+                yakuResults.push({ name: "花見で一杯", pts: 5 });
+                triggerYakuAnimation("花見で一杯");
+            }
+            if (hasSake && hasTsuki) {
+                yakuResults.push({ name: "月見で一杯", pts: 5 });
+                triggerYakuAnimation("月見で一杯");
+            }
 
+            // 短冊與赤短青短
             const akaCount = currentCards.filter(c => c.type === "赤短").length;
             const aoCount = currentCards.filter(c => c.type === "青短").length;
             let hasSpecialTan = false;
@@ -989,19 +1097,23 @@
                 tanBonus = tanAllCards.length - 6;
                 yakuResults.push({ name: `赤短・青短重複 (+${tanBonus}張)`, pts: 10 + tanBonus });
                 hasSpecialTan = true;
+                triggerYakuAnimation("赤短・青短");
             } else if (akaCount === 3) {
                 tanBonus = tanAllCards.length - 3;
                 yakuResults.push({ name: `赤短 (+${tanBonus}張)`, pts: 5 + tanBonus });
                 hasSpecialTan = true;
+                triggerYakuAnimation("赤短 🔴"); // 👑 觸發赤短動畫！
             } else if (aoCount === 3) {
                 tanBonus = tanAllCards.length - 3;
                 yakuResults.push({ name: `青短 (+${tanBonus}張)`, pts: 5 + tanBonus });
                 hasSpecialTan = true;
+                triggerYakuAnimation("青短 🔵"); // 👑 觸發青短動畫！
             }
             if (!hasSpecialTan && tanAllCards.length >= 5) {
                 yakuResults.push({ name: `短冊 (${tanAllCards.length}張)`, pts: 1 + (tanAllCards.length - 5) });
             }
 
+            // 豬鹿蝶與種牌
             const hasInu = currentCards.some(c => c.id === 25);
             const hasShika = currentCards.some(c => c.id === 37);
             const hasCho = currentCards.some(c => c.id === 21);
@@ -1011,11 +1123,13 @@
                 let taneBonus = taneCards.length - 3;
                 yakuResults.push({ name: `豬鹿蝶 (+${taneBonus}張)`, pts: 5 + taneBonus });
                 hasInoShikaCho = true;
+                triggerYakuAnimation("豬鹿蝶 🐗🦌🦋"); // 👑 觸發豬鹿蝶動畫！
             }
             if (!hasInoShikaCho && taneCards.length >= 5) {
                 yakuResults.push({ name: `種 (${taneCards.length}張)`, pts: 1 + (taneCards.length - 5) });
             }
 
+            // 粕牌
             if (kasuCards.length >= 10) {
                 yakuResults.push({ name: `カス (${kasuCards.length}張)`, pts: 1 + (kasuCards.length - 10) });
             }
